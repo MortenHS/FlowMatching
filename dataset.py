@@ -6,26 +6,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-# gym.register_envs(gymnasium_robotics)
-
-# env = gym.make("PointMaze_UMaze-v3")
-# observations = []
-# trajectories = []
-# max_trajs = 10000
-# for _ in range(max_trajs):
-#     for _ in tqdm(range(max_trajs)):
-#         observation, info = env.reset()
-#         episode_over = False
-#         while not episode_over:
-#             action = env.action_space.sample()
-#             observation, reward, terminated, truncated, info = env.step(action)
-#             observations.append(observation['observation'][:2])
-#             episode_over = terminated or truncated
-#         trajectories.append(np.array(observations))
-
-# torch.save(trajectories, 'trajectories.pth')
-
-# Register and create environment
 gym.register_envs(gymnasium_robotics)
 env = gym.make("PointMaze_UMaze-v3")
 
