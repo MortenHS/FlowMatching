@@ -5,19 +5,22 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, Dataset
 from collections import Counter
 
-from dataset import dataLoaderFM
+from data.dataset import get_data_loader
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------- Functions ------------------------------------
 # ---------------------------------------------------------------------------------------
 
-def vis_dataset_distribution(DL, max_batches):
+def vis_dataset_distribution(max_batches, DL=get_data_loader(), save_dir='results/Dataset_plots'):
     observation_lst = []
     for count, batch in enumerate(DL):
         if count == max_batches:
             break
         obs = batch['observations']
         observation_lst.append(obs)
+
+    os.makedirs(save_dir, exist_ok=True)
+    plot_path = os.path.join(save_dir, 'dataset_distribution.png')
 
     plt.figure(figsize=(8, 6))
     for observations in observation_lst:
@@ -26,10 +29,12 @@ def vis_dataset_distribution(DL, max_batches):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.grid()
-    plt.show()
-    print("Trajectories displayed: Done")
 
-def vis_two_trajs(DL, idx = 0):
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Image saved in: {plot_path}")
+
+def vis_two_trajs(DL=get_data_loader(), idx = 0, save_dir='results/Dataset_plots'):
     test_batch = next(iter(DL))["observations"]
     trajectory = test_batch[idx].cpu().numpy()
     trajectory_2 = test_batch[idx+1].cpu().numpy()
@@ -47,6 +52,9 @@ def vis_two_trajs(DL, idx = 0):
     print(f"Total duplicate points 1: {len(duplicates)}, 2: {len(duplicates_2)}, the final one")
     print("Duplicate points and their counts: 1:", duplicates, " 2: ", duplicates_2)
 
+    os.makedirs(save_dir, exist_ok=True)
+    plot_path = os.path.join(save_dir, 'two_trajs.png')
+
     plt.figure(figsize=(10, 6))
 
     plt.plot(trajectory[:, 0], trajectory[:, 1], marker='o', color='red', alpha=0.5, label="Trajectory", zorder=1)
@@ -59,10 +67,12 @@ def vis_two_trajs(DL, idx = 0):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.grid()
-    plt.legend()
-    plt.show()
+    
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Image saved in: {plot_path}")
 
-def vis_losses(losses, save_dir='Plotted loss'):
+def vis_losses(losses, save_dir='results/Plotted loss'):
     avg_loss = sum(losses)/len(losses)
     med_loss = stat.median(losses)
 
@@ -77,12 +87,14 @@ def vis_losses(losses, save_dir='Plotted loss'):
     plt.xlabel('Steps')
     plt.ylabel('Loss')
     plt.legend()
-    plt.grid(True)
-    plt.savefig(plot_path)
-    plt.show()
+    plt.grid()
+
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Image saved in: {plot_path}")
 
 
-def plot_trajectories(traj, sec_dim, observation_lst):
+def plot_trajectories(traj, sec_dim, observation_lst, save_dir='results/Sample_plots'):
     """Plot trajectories of some selected samples."""
     n = sec_dim
     plt.figure(figsize=(8, 8))
@@ -108,11 +120,12 @@ def plot_trajectories(traj, sec_dim, observation_lst):
     plt.grid(True)
     plt.xlabel('X')
     plt.ylabel('Y')
-    plt.show()
+
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Image saved in: {plot_path}")
 
 
-# ---------------------------------------------------------------------------------------
-# ------------------------------------------ Init ---------------------------------------
-# ---------------------------------------------------------------------------------------
-# vis_dataset_distribution(DL=dataLoaderFM, max_batches=20)
-# vis_two_trajs(dataLoaderFM)
+if __name__ == '__main__':
+    vis_dataset_distribution(max_batches=20)
+    vis_two_trajs()
