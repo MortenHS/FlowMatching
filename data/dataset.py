@@ -6,15 +6,15 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence
 
-from data.config import BATCH_SIZE
+from data.config import BATCH_SIZE, FIXED_LENGTH
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------- Functions ------------------------------------
 # ---------------------------------------------------------------------------------------
 
 class FixedLengthCollate:
-    def __init__(self):
-        self.fixed_length = 70  
+    def __init__(self, fixed_length=FIXED_LENGTH):
+        self.fixed_length = fixed_length  
 
     def __call__(self, batch):
         """

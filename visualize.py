@@ -1,11 +1,14 @@
 import os
+import torch
 import numpy as np
 import statistics as stat
 import matplotlib.pyplot as plt
+
 from torch.utils.data import DataLoader, Dataset
 from collections import Counter
 
 from data.dataset import get_data_loader
+from data.config import FIXED_LENGTH
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------- Functions ------------------------------------
@@ -33,6 +36,7 @@ def vis_dataset_distribution(max_batches, DL=get_data_loader(), save_dir='result
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Image saved in: {plot_path}")
+    return observation_lst
 
 def vis_two_trajs(DL=get_data_loader(), idx = 0, save_dir='results/Dataset_plots'):
     test_batch = next(iter(DL))["observations"]
@@ -94,28 +98,22 @@ def vis_losses(losses, save_dir='results/Plotted loss'):
     print(f"Image saved in: {plot_path}")
 
 
-def plot_trajectories(traj, sec_dim, observation_lst, save_dir='results/Sample_plots'):
+def plot_trajectories(traj, sec_dim=FIXED_LENGTH, save_dir='results/Sample_plots'):
     """Plot trajectories of some selected samples."""
-    n = sec_dim
-    plt.figure(figsize=(8, 8))
-    plt.scatter(traj[0, :n, 0], traj[0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample")
-    plt.scatter(traj[:, :n, 0], traj[:, :n, 1], s=0.35, alpha=0.2, c="red", label="Flow")
-    plt.scatter(traj[-1, :n, 0], traj[-1, :n, 1], s=4, alpha=1, c="blue", label="Target Sample")
-
-    # for observations in observation_lst:
-    #     plt.plot(observations[0, :, 0].cpu().numpy(), observations[0, :, 1].cpu().numpy(), color='g', alpha=0.5)
-
-    # for observations in observation_lst:
-    #     plt.scatter(
-    #         observations[0, :, 0].cpu().numpy(),  # X positions
-    #         observations[0, :, 1].cpu().numpy(),  # Y positions
-    #         color='g', 
-    #         alpha=0.5,
-    #         s=1  # Adjust point size if needed
-    #     )
-
     
-    plt.legend()
+    n = sec_dim
+    if isinstance(traj, torch.Tensor):
+        traj = traj.cpu().numpy()
+    
+    os.makedirs(save_dir, exist_ok=True)
+    plot_path = os.path.join(save_dir, 'sample_trajs.png')
+
+    plt.figure(figsize=(8, 8))
+    plt.scatter(traj[0, 0, :n, 0], traj[0, 0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample", zorder=2)
+    plt.scatter(traj[0, :, :n, 0], traj[0, :, :n, 1], s=1, alpha=0.2, c="red", label="Flow", zorder=1)
+    plt.scatter(traj[0, -1, :n, 0], traj[0, -1, :n, 1], s=10, alpha=1, c="blue", label="Target Sample", zorder=2)
+    
+    plt.legend(loc='upper left')
     plt.title("Flow Matching Evolution")
     plt.grid(True)
     plt.xlabel('X')

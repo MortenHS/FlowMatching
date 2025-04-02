@@ -149,8 +149,6 @@ def load_checkpoint(model_type="flow_matching", lr=LR, save_path=SAVE_PATH, map_
         raise ValueError("Unsupported model type")
 
     optimizer = torch.optim.AdamW(flow_model.parameters(), lr)
-
-    print("To run load_checkpoint the model has to be rerun first with new shapes")
     checkpoint = torch.load(save_path, map_location=map_location)
 
     flow_model.load_state_dict(checkpoint['model_state_dict'])
