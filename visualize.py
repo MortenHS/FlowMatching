@@ -109,9 +109,13 @@ def plot_trajectories(traj, sec_dim=FIXED_LENGTH, save_dir='results/Sample_plots
     plot_path = os.path.join(save_dir, 'sample_trajs.png')
 
     plt.figure(figsize=(8, 8))
-    plt.scatter(traj[0, 0, :n, 0], traj[0, 0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample", zorder=2)
-    plt.scatter(traj[0, :, :n, 0], traj[0, :, :n, 1], s=1, alpha=0.2, c="red", label="Flow", zorder=1)
-    plt.scatter(traj[0, -1, :n, 0], traj[0, -1, :n, 1], s=10, alpha=1, c="blue", label="Target Sample", zorder=2)
+    plt.scatter(traj[0, :n, 0], traj[0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample", zorder=2)
+    plt.scatter(traj[:, :n, 0], traj[:, :n, 1], s=1, alpha=0.2, c="red", label="Flow", zorder=1)
+    plt.scatter(traj[-1, :n, 0], traj[-1, :n, 1], s=10, alpha=1, c="blue", label="Target Sample", zorder=2)
+
+    # plt.scatter(traj[0, 0, :n, 0], traj[0, 0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample", zorder=2)
+    # plt.scatter(traj[0, :, :n, 0], traj[0, :, :n, 1], s=1, alpha=0.2, c="red", label="Flow", zorder=1)
+    # plt.scatter(traj[0, -1, :n, 0], traj[0, -1, :n, 1], s=10, alpha=1, c="blue", label="Target Sample", zorder=2)
     
     plt.legend(loc='upper left')
     plt.title("Flow Matching Evolution")
