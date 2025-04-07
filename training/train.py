@@ -6,6 +6,7 @@ from data.dataset import get_data_loader
 from data.utils import get_device
 from data.config import SIGMA_INIT, NUM_EPOCHS, SAVE_PATH, LR, TRAJ_DIM
 from visualize import vis_losses
+from sampling.sample import sample_in_loop
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------- Functions ------------------------------------
@@ -37,15 +38,15 @@ def compute_sigma_t(method, t, sigma): #
         raise ValueError("Inappropriate method")
         
 
-def compute_conditional_flow(method, x0, x1, t, xt, sigma):
+def compute_conditional_flow(method, x0, x1, t, xt, sigma, sigma_t):
     '''
     Calculates the conditional velocity field u_t defined by Eq. 21 in Lipman 2023
     The corresponding conditional flow: Eq.22
     '''
     if method == "OT":
-        t_expanded = t[:, None, None].expand(-1, xt.shape[1], -1)
-        return (x1 - (1 - sigma) * xt) / (1 - (1 - sigma) * t_expanded) # Eq. 21, Lipman 2023,
-        # return (x1 - (1 - sigma) * xt)/sigma # .../sigma => .../sigma_t
+        # t_expanded = t[:, None, None].expand(-1, xt.shape[1], -1)
+        # return (x1 - (1 - sigma) * xt) / (1 - (1 - sigma) * t_expanded) # Eq. 21, Lipman 2023,
+        return (x1 - (1 - sigma) * xt) / sigma_t
     elif method == "VF":
         return x1 - x0 # For "normal" CFM, Eq. 3b in Ye
     else:
@@ -59,25 +60,31 @@ def sample_conditional_pt(method, x0, x1, t, sigma): # Sample xt
 
     Draws a sample from probability path
     '''
+    torch.manual_seed(1234) # To ensure that the generation of epsilon is consistent
     epsilon = torch.randn_like(x0).to(device=x0.device, dtype=torch.float32)
+
     sigma_t = compute_sigma_t(method, t, sigma)
+
+    if method == "OT":
+        sigma_t = sigma_t[:, None, None].expand(-1, x1.shape[1], -1)
+
     t_expanded = t[:, None, None].expand(-1, x1.shape[1], -1)
     mu_t = compute_mu_t(method, x0, x1, t_expanded)
-    return mu_t + sigma_t * epsilon, epsilon # Eq. 4.50 in Lipman 2024?
+    
+    return mu_t + sigma_t * epsilon, epsilon, sigma_t # Eq. 4.50 in Lipman 2024?
 
 
 def sample_and_compute(method, x0, x1, t, sigma):
     
-    print(f"Training with method: {method}")
     if method in ["OT", "VF"]:
-        xt, eps = sample_conditional_pt(method, x0, x1, t, sigma) # conditional probability path
-        ut = compute_conditional_flow(method, x0, x1, t, xt, sigma) # Velocity field
+        xt, eps, sigma_t = sample_conditional_pt(method, x0, x1, t, sigma) # conditional probability path
+        ut = compute_conditional_flow(method, x0, x1, t, xt, sigma, sigma_t) # Velocity field
         return t, xt, ut, eps
     else:
         raise ValueError("Inappropriate method")
 
 def compute_xt_ut(method, x0, x1, t_given, sigma, epsilon):
-
+    print(f"Method is: {method}")
     if method == "VF":
         sigma_t = sigma
         mu_t = t_given * x1 + (1 - t_given) * x0
@@ -86,10 +93,10 @@ def compute_xt_ut(method, x0, x1, t_given, sigma, epsilon):
         return computed_xt, computed_ut
 
     elif method == "OT":
-        sigma_t = 1 - (1 - sigma) * t
+        sigma_t = 1 - (1 - sigma) * t_given
         mu_t = t_given * x1
         computed_xt = mu_t + sigma_t * epsilon
-        computed_ut = (x1 - (1 - sigma) * comp_xt) / sigma_t
+        computed_ut = (x1 - (1 - sigma) * computed_xt) / sigma_t
         return computed_xt, computed_ut
 
     else:
@@ -120,8 +127,7 @@ def show_untrained_model(model_type="flow_matching", DL=get_data_loader(), sigma
 
     return vt, xt, ut
 
-
-def train_fm(model_type="flow_matching", DL=get_data_loader(), sigma=SIGMA_INIT, num_epochs=NUM_EPOCHS, lr=LR, device=get_device(), save_path=SAVE_PATH):
+def train_fm(method, model_type="flow_matching", DL=get_data_loader(), sigma=SIGMA_INIT, num_epochs=NUM_EPOCHS, lr=LR, device=get_device(), save_path=SAVE_PATH):
     
     if model_type == "flow_matching":
         flow_model = TrajectoryFlowModel().to(device)
@@ -138,7 +144,7 @@ def train_fm(model_type="flow_matching", DL=get_data_loader(), sigma=SIGMA_INIT,
             x0 = torch.rand_like(x1).to(device)
             t = torch.rand((x1.shape[0],), device=device)
 
-            t, xt, ut = sample_and_compute(x0, x1, t, sigma)
+            t, xt, ut, eps = sample_and_compute(method, x0, x1, t, sigma)
 
             t_expanded = t[:, None, None].expand(-1, xt.shape[1], -1)
             xt = torch.cat([xt, t_expanded], dim=-1).to(device, dtype=torch.float32)
@@ -152,7 +158,10 @@ def train_fm(model_type="flow_matching", DL=get_data_loader(), sigma=SIGMA_INIT,
 
             optimizer.step()
             optimizer.zero_grad()
-            
+
+        # Sample:
+        sample_in_loop(x1.shape[1], flow_model, device, epoch)
+        
         # Save checkpoint after each epoch
         checkpoint = {
             'model_state_dict': flow_model.state_dict(),
@@ -166,6 +175,7 @@ def train_fm(model_type="flow_matching", DL=get_data_loader(), sigma=SIGMA_INIT,
 
         torch.save(checkpoint, save_path)
         print(f"Checkpoint saved to {save_path} after epoch {epoch + 1}")
+
 
 def load_checkpoint(model_type="flow_matching", lr=LR, save_path=SAVE_PATH, map_location=get_device()):
     
@@ -190,4 +200,4 @@ def load_checkpoint(model_type="flow_matching", lr=LR, save_path=SAVE_PATH, map_
 
 
 if __name__ == '__main__':
-    train_fm()
+    train_fm("VF")

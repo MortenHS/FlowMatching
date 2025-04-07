@@ -12,23 +12,28 @@ def test_fm(method, sigma=SIGMA_INIT, sec_dim=FIXED_LENGTH, traj_dim=TRAJ_DIM, m
     else:
         raise ValueError("Unsupported model type")
     
-    x0, x1 = [torch.randn(batch_size, sec_dim, traj_dim), torch.randn(batch_size, sec_dim, traj_dim)]
+    x0, x1 = [torch.randn(batch_size, sec_dim, traj_dim, device=device), torch.randn(batch_size, sec_dim, traj_dim, device=device)]
 
     torch.manual_seed(1234)
 
-    t = torch.rand((x1.shape[0],), device=device)
+    t = torch.rand((batch_size), device=device)
     t, xt, ut, eps = sample_and_compute(method, x0, x1, t, sigma)
 
     torch.manual_seed(1234)
     epsilon = torch.randn_like(x0)
-    t_given_init = torch.rand(batch_size)
-    t_given = t_given_init.reshape(-1, *([1] * (x0.dim() - 1)))
+
+    assert torch.all(eps.eq(epsilon))
+    
+    torch.manual_seed(1234)
+    t_given_init = torch.rand((batch_size), device=device)
+    t_given = t_given_init[:, None, None].expand(-1, x0.shape[1], -1)
 
     comp_xt, comp_ut = compute_xt_ut(method, x0, x1, t_given, sigma, epsilon)
-
+    
+    assert any(t_given_init == t)
     assert torch.all(xt.eq(comp_xt))
     assert torch.all(ut.eq(comp_ut))
-    assert torch.all(eps.eq(epsilon))
+    
 
 if __name__ == '__main__':
     # Run with: python -m tests.test_cfm

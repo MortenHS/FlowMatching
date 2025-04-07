@@ -98,7 +98,7 @@ def vis_losses(losses, save_dir='results/Plotted loss'):
     print(f"Image saved in: {plot_path}")
 
 
-def plot_trajectories(traj, sec_dim=FIXED_LENGTH, save_dir='results/Sample_plots'):
+def plot_trajectories(traj, epoch, sec_dim=FIXED_LENGTH, save_dir='results/Sample_plots'):
     """Plot trajectories of some selected samples."""
     
     n = sec_dim
@@ -106,7 +106,7 @@ def plot_trajectories(traj, sec_dim=FIXED_LENGTH, save_dir='results/Sample_plots
         traj = traj.cpu().numpy()
     
     os.makedirs(save_dir, exist_ok=True)
-    plot_path = os.path.join(save_dir, 'sample_trajs.png')
+    plot_path = os.path.join(save_dir, f'sample_trajs_{epoch}.png')
 
     plt.figure(figsize=(8, 8))
     plt.scatter(traj[0, :n, 0], traj[0, :n, 1], s=10, alpha=0.8, c="black", label="Noisy Sample", zorder=2)
