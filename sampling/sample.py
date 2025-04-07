@@ -45,7 +45,7 @@ def sample_fm(sec_dim, model_type="flow_matching", traj_dim=TRAJ_DIM, num_steps=
         )
     return traj # traj[-1]
 
-def sample_in_loop(sec_dim, flow_model, device, epoch, num_steps=10000, solver="euler"):
+def sample_in_loop(sec_dim, flow_model, device, epoch, method, num_steps=10000, solver="euler"):
     from visualize import plot_trajectories
     node = NeuralODE(
         torch_wrapper(flow_model),
@@ -61,7 +61,7 @@ def sample_in_loop(sec_dim, flow_model, device, epoch, num_steps=10000, solver="
             t_span = torch.linspace(0, 1, num_steps, device=device, dtype=torch.float32),
         )
 
-    plot_trajectories(traj_observations, epoch)
+    plot_trajectories(traj_observations, epoch, method)
     
     
 

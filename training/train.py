@@ -160,7 +160,7 @@ def train_fm(method, model_type="flow_matching", DL=get_data_loader(), sigma=SIG
             optimizer.zero_grad()
 
         # Sample:
-        sample_in_loop(x1.shape[1], flow_model, device, epoch)
+        sample_in_loop(x1.shape[1], flow_model, device, epoch, method)
         
         # Save checkpoint after each epoch
         checkpoint = {

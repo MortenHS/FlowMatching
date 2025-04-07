@@ -42,7 +42,7 @@ class FixedLengthCollate:
             "observations": padded_obs
         }
 
-def get_data_loader(dataset='umaze-v2', batch_size=BATCH_SIZE):
+def get_data_loader(dataset='medium-v2', batch_size=BATCH_SIZE):
     if dataset == 'umaze-v2':
         dataset = minari.load_dataset('D4RL/pointmaze/umaze-v2')
     elif dataset == 'medium-v2':

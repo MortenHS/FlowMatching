@@ -11,9 +11,10 @@ Test forskjellige hyperparametere
 
 def main():
     # Training:
-    train_fm("VF")
+    method = 'OT'
+    train_fm(method)
     flow_model, optimizer, losses, sigma, vt, xt, ut = load_checkpoint()
-    vis_losses(losses)
+    vis_losses(losses, method)
 
     # Sampling:
     # flow_model, optimizer, losses, sigma, vt, xt, ut = load_checkpoint()
@@ -21,7 +22,6 @@ def main():
     # traj = sample_fm(sec_dim)
     # plot_trajectories(traj)
     
-    return None # Similar to void func in c/c++
 
 
 if __name__ == '__main__':

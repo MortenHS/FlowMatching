@@ -33,7 +33,7 @@ def test_fm(method, sigma=SIGMA_INIT, sec_dim=FIXED_LENGTH, traj_dim=TRAJ_DIM, m
     assert any(t_given_init == t)
     assert torch.all(xt.eq(comp_xt))
     assert torch.all(ut.eq(comp_ut))
-    
+    print("Assertions OK, test complete")
 
 if __name__ == '__main__':
     # Run with: python -m tests.test_cfm
